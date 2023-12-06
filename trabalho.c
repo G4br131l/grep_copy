@@ -1,10 +1,12 @@
+/* Gabriel Fernando Ribeiro
+bucador de strings em subdiretorios, arquivos e em seus nomes.
+ATENCAO: devido a codificacao pode haver alguns bugs em certas strings, quando isso ocorrer provavelmente o programa ira fechar antes de terminar o processo desejado.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(__linux__)
-    #include <unistd.h>
-#else
+#if !defined(__linux__)
     #include <direct.h>
 #endif
 
@@ -12,8 +14,8 @@
 #define RED   "\x1B[31m"
 #define RESET "\x1B[0m"
 
-#define MAXnomeDeArquivo 50
-#define MAXlistaDeArquivos 100
+#define MAXnomeDeArquivo 128
+#define MAXlistaDeArquivos 256
 #define MAIORlinhasuportada 512
 
 typedef struct 
@@ -56,6 +58,7 @@ int main(int argc, char const *argv[])
             printf("\n%s\n%s linha: %d\n", local_linha, listaDeArquivos.lista[i], local);
         }
     }
+
 
     printf("\ndiretorios:\n\n");
 
@@ -125,21 +128,18 @@ int main(int argc, char const *argv[])
 
         while (fscanf(lista," %s ", arquivo) != EOF)
         {
-            if (/* strstr(arquivo, ".txt") */ 1) {
+            if (strstr(arquivo, ".txt") && !strstr(arquivo, "arquivos.txt")) {
                 (*listaDeArquivos)[*tamLista] = strdup(arquivo);
                 (*tamLista)++;
             }
         }
 
         fclose(lista);
-        //remove("arquivos.txt");
+        remove("arquivos.txt");
     }
 #endif
 
 int buscar_string_arquivo(char *nomeArquivo, char busca[], char *linha) {
-    if (!strstr(nomeArquivo , ".txt")) {
-        return 0;
-    }
     FILE *arquivo = fopen(nomeArquivo, "r");
 
     int local_linha = 0;
@@ -161,7 +161,7 @@ int buscar_string_arquivo(char *nomeArquivo, char busca[], char *linha) {
         strcpy(linha, colorir_palavra(linha, busca));
         return local_linha;
     }
-    return flag;
+    return 0;
 }
 
 char *colorir_palavra(char linha[], char palavra[]) {
@@ -175,10 +175,8 @@ char *colorir_palavra(char linha[], char palavra[]) {
 
     if (ret - linha != 0)
     {
-        char *antes = ret - 1;
-        char temp = antes[0];
+        char *antes = ret;
         *antes = '\0';
-        sprintf(antes + strlen(antes), "%c", temp); //concatena caractere
     }
 
     char *depois = ret + strlen(palavra);
@@ -192,9 +190,9 @@ char *colorir_palavra(char linha[], char palavra[]) {
     return saida;
 }
 
-int buscar_string_diretorio(char *lista, char busca[]) {
-    if(strstr(lista, busca)) {
-        strcpy(lista ,colorir_palavra(lista, busca));
+int buscar_string_diretorio(char *nome, char busca[]) {
+    if(strstr(nome, busca)) {
+        strcpy(nome ,colorir_palavra(nome, busca));
         return 1;
     }
     
